@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-svca
+spec:
+  selector:
+    matchLabels:
+      run: hello-svca
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        run: hello-svca
+    spec:
+      containers:
+        - name: hello-node-app
+          image: pinrojas/hello-svca:v1
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-svcb
+spec:
+  selector:
+    matchLabels:
+      run: hello-svcb
+  replicas: 4
+  template:
+    metadata:
+      labels:
+        run: hello-svcb
+    spec:
+      containers:
+        - name: hello-node-app
+          image: pinrojas/hello-svcb:v1
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-myservicea
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: myservicea.foo.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hello-svca
+            port:
+              number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-myserviceb
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: myserviceb.foo.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: hello-svcb
+            port:
+              number: 8080
